@@ -1,0 +1,25 @@
+{
+  "name": "nativescript-google-drive",
+  "version": "1.0.0",
+  "description": "A Google Drive client for NativeScript",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "https://github.com/radu2501/nativescript-google-drive",
+  "keywords": [
+    "nativescript",
+    "google",
+    "drive"
+  ],
+  "author": "Radu Nicoara",
+  "license": "MIT",
+  "nativescript": {
+    "platforms": {
+      "android": "2.3.0"
+    }
+  },
+  "dependencies": {
+    "tns-platform-declarations": "^3.2.0"
+  }
+}
