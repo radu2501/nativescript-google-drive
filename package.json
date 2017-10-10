@@ -20,6 +20,10 @@
     }
   },
   "dependencies": {
-    "tns-platform-declarations": "^3.2.0"
+    "nativescript-permissions": "^1.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.34",
+    "tns-core-modules": "^3.2.0"
   }
 }
