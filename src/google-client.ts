@@ -29,14 +29,23 @@ let DriveTasks = ro.nicoara.radu.googledrive.Tasks;
 export class GoogleDriveClient {
     private application: any;
 
+    public static get SELECTED_ACCOUNT(): string {
+        return require('application-settings').getString(PREF_ACCT_NAME);
+    }
+
     constructor(private appName: string, private scopes: string[] = [DriveScopes.DRIVE]) {
         this.application = require('application').android;
+    }
+
+    public chooseUserAccount(): Promise<string> {
+        let credentials = this.getGapiCredentials();
+        return this.chooseAccount(credentials, true).then(() => Promise.resolve(GoogleDriveClient.SELECTED_ACCOUNT));
     }
 
     public downloadFile(googleId: string, output: string): Promise<void> {
         let credentials = this.getGapiCredentials();
         return this.chooseAccount(credentials).then((credentials) => Promise.resolve(credentials))
-            .then(service => {
+            .then(credentials => this.getService(credentials)).then(service => {
                 return new Promise<void>((resolve, reject) => {
                     DriveTasks.downloadFile(service, googleId, output, this.getTaskCallback(resolve, reject));
                 });
@@ -91,6 +100,17 @@ export class GoogleDriveClient {
             });
     }
 
+    public deleteFile(googleId: string): Promise<void> {
+        let credentials = this.getGapiCredentials();
+        return this.chooseAccount(credentials).then((credentials) => Promise.resolve(credentials))
+            .then(credentials => this.getService(credentials))
+            .then(service => {
+                return new Promise<void>((resolve, reject) => {
+                    DriveTasks.deleteFile(service, googleId, this.getTaskCallback(resolve, reject));
+                });
+            });
+    }
+    
     public createFolder(folderName: string): Promise<string> {
         return this.createFile(folderName, FOLDER_TYPE);
     }
@@ -124,11 +144,9 @@ export class GoogleDriveClient {
         }
         return this.chooseAccount(credentials).then((credentials) => Promise.resolve(this.getService(credentials)))
             .then(service => {
-                console.log('got a service');
                 return new Promise<FileInfo[]>((resolve, reject) => {
                     DriveTasks.listFiles(service, qParams, this.getTaskCallback(
                         (files) => {
-                            console.log('im done')
                             let fileArray: FileInfo[] = [];
                             for (let i = 0; i < files.size(); i++) {
                                 let f = files.get(i);
@@ -141,7 +159,6 @@ export class GoogleDriveClient {
                             resolve(fileArray);
                         },
                         (err) => {
-                            console.log(err.getCause().getMessage());
                             if (err.isTransientAuthError()) {
                                 this.setActivityResultCallback((requestCode, resultCode, data) => {
                                     if (resultCode === RESULT_OK) {
@@ -178,25 +195,21 @@ export class GoogleDriveClient {
         return new Drive.Builder(transport, jsonFactory, credential).setApplicationName(this.appName).build();
     }
 
-    private chooseAccount(credential: any): Promise<any> {
+    private chooseAccount(credential: any, override: boolean = false): Promise<any> {
         return new Promise((resolve, reject) => {
             if (permissions.hasPermission(Manifest.permission.GET_ACCOUNTS)) {
                 let acctName: string = require('application-settings').getString(PREF_ACCT_NAME);
-                if (!!acctName) {
-                    console.log('selected acct name %s', acctName);
+                if (!!acctName && !override) {
                     credential.setSelectedAccountName(acctName);
                     return resolve(credential);
                 } else {
                     let intent = credential.newChooseAccountIntent();
 
                     this.setActivityResultCallback(function (requestCode, resultCode, data) {
-                        console.log('in callback');
                         if (requestCode === REQUEST_ACCOUNT_PICKER && resultCode === RESULT_OK && !!data.getExtras()) {
                             let acctName: string = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-                            console.log('selected acct name %s', acctName);
                             credential.setSelectedAccountName(acctName);
                             require('application-settings').setString(PREF_ACCT_NAME, acctName);
-                            console.log('set acct name');
                             return resolve(credential);
                         } else {
                             return reject({ requestCode: requestCode, resultCode: resultCode })
@@ -212,24 +225,21 @@ export class GoogleDriveClient {
                     })
                     .catch(() => {
                         reject();
-                    })
+                    });
             }
         });
 
     }
 
     private setActivityResultCallback(callback: Function) {
-        console.log('setting callback')
         let activity = this.getForegroundActivity();
         let prevCallback = activity.onActivityResult;
 
         activity.onActivityResult = function (requestCode, resultCode, data) {
-            console.log('callback called')
             callback(requestCode, resultCode, data);
             activity.onActivityResult = prevCallback;
         }
 
-        console.log('DEBUG: calback set')
     }
 
     private getForegroundActivity(): any {

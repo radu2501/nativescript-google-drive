@@ -23,11 +23,22 @@ var GoogleDriveClient = (function () {
         this.scopes = scopes;
         this.application = require('application').android;
     }
+    Object.defineProperty(GoogleDriveClient, "SELECTED_ACCOUNT", {
+        get: function () {
+            return require('application-settings').getString(PREF_ACCT_NAME);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    GoogleDriveClient.prototype.chooseUserAccount = function () {
+        var credentials = this.getGapiCredentials();
+        return this.chooseAccount(credentials, true).then(function () { return Promise.resolve(GoogleDriveClient.SELECTED_ACCOUNT); });
+    };
     GoogleDriveClient.prototype.downloadFile = function (googleId, output) {
         var _this = this;
         var credentials = this.getGapiCredentials();
         return this.chooseAccount(credentials).then(function (credentials) { return Promise.resolve(credentials); })
-            .then(function (service) {
+            .then(function (credentials) { return _this.getService(credentials); }).then(function (service) {
             return new Promise(function (resolve, reject) {
                 DriveTasks.downloadFile(service, googleId, output, _this.getTaskCallback(resolve, reject));
             });
@@ -80,6 +91,17 @@ var GoogleDriveClient = (function () {
             });
         });
     };
+    GoogleDriveClient.prototype.deleteFile = function (googleId) {
+        var _this = this;
+        var credentials = this.getGapiCredentials();
+        return this.chooseAccount(credentials).then(function (credentials) { return Promise.resolve(credentials); })
+            .then(function (credentials) { return _this.getService(credentials); })
+            .then(function (service) {
+            return new Promise(function (resolve, reject) {
+                DriveTasks.deleteFile(service, googleId, _this.getTaskCallback(resolve, reject));
+            });
+        });
+    };
     GoogleDriveClient.prototype.createFolder = function (folderName) {
         return this.createFile(folderName, FOLDER_TYPE);
     };
@@ -111,10 +133,8 @@ var GoogleDriveClient = (function () {
         }
         return this.chooseAccount(credentials).then(function (credentials) { return Promise.resolve(_this.getService(credentials)); })
             .then(function (service) {
-            console.log('got a service');
             return new Promise(function (resolve, reject) {
                 DriveTasks.listFiles(service, qParams, _this.getTaskCallback(function (files) {
-                    console.log('im done');
                     var fileArray = [];
                     for (var i = 0; i < files.size(); i++) {
                         var f = files.get(i);
@@ -125,7 +145,6 @@ var GoogleDriveClient = (function () {
                     }
                     resolve(fileArray);
                 }, function (err) {
-                    console.log(err.getCause().getMessage());
                     if (err.isTransientAuthError()) {
                         _this.setActivityResultCallback(function (requestCode, resultCode, data) {
                             if (resultCode === RESULT_OK) {
@@ -159,26 +178,23 @@ var GoogleDriveClient = (function () {
         var jsonFactory = JacksonFactory.getDefaultInstance();
         return new Drive.Builder(transport, jsonFactory, credential).setApplicationName(this.appName).build();
     };
-    GoogleDriveClient.prototype.chooseAccount = function (credential) {
+    GoogleDriveClient.prototype.chooseAccount = function (credential, override) {
         var _this = this;
+        if (override === void 0) { override = false; }
         return new Promise(function (resolve, reject) {
             if (permissions.hasPermission(Manifest.permission.GET_ACCOUNTS)) {
                 var acctName = require('application-settings').getString(PREF_ACCT_NAME);
-                if (!!acctName) {
-                    console.log('selected acct name %s', acctName);
+                if (!!acctName && !override) {
                     credential.setSelectedAccountName(acctName);
                     return resolve(credential);
                 }
                 else {
                     var intent = credential.newChooseAccountIntent();
                     _this.setActivityResultCallback(function (requestCode, resultCode, data) {
-                        console.log('in callback');
                         if (requestCode === REQUEST_ACCOUNT_PICKER && resultCode === RESULT_OK && !!data.getExtras()) {
                             var acctName_1 = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-                            console.log('selected acct name %s', acctName_1);
                             credential.setSelectedAccountName(acctName_1);
                             require('application-settings').setString(PREF_ACCT_NAME, acctName_1);
-                            console.log('set acct name');
                             return resolve(credential);
                         }
                         else {
@@ -200,15 +216,12 @@ var GoogleDriveClient = (function () {
         });
     };
     GoogleDriveClient.prototype.setActivityResultCallback = function (callback) {
-        console.log('setting callback');
         var activity = this.getForegroundActivity();
         var prevCallback = activity.onActivityResult;
         activity.onActivityResult = function (requestCode, resultCode, data) {
-            console.log('callback called');
             callback(requestCode, resultCode, data);
             activity.onActivityResult = prevCallback;
         };
-        console.log('DEBUG: calback set');
     };
     GoogleDriveClient.prototype.getForegroundActivity = function () {
         return this.application.startActivity;
