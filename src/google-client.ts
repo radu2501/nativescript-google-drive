@@ -3,7 +3,6 @@ declare var com;
 declare var java;
 declare var android;
 
-
 let Drive = com.google.api.services.drive.Drive;
 let GoogleAccountCredential = com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 let Arrays = java.util.Arrays;
@@ -17,7 +16,7 @@ declare var ro;
 
 import * as permissions from 'nativescript-permissions';
 import { DriveScopes } from './google-drive.scopes';
-
+import * as util from './util';
 const PREF_ACCT_NAME: string = 'gapi:acct_name';
 const REQUEST_ACCOUNT_PICKER = 1000;
 const REQUEST_AUTHORIZATION = 1001;
@@ -30,7 +29,7 @@ export class GoogleDriveClient {
     private application: any;
 
     public static get SELECTED_ACCOUNT(): string {
-        return require('application-settings').getString(PREF_ACCT_NAME);
+        return util.getSelectedAccount();
     }
 
     constructor(private appName: string, private scopes: string[] = [DriveScopes.DRIVE]) {

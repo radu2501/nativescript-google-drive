@@ -10,6 +10,7 @@ var Manifest = android.Manifest;
 var AccountManager = android.accounts.AccountManager;
 var permissions = require("nativescript-permissions");
 var google_drive_scopes_1 = require("./google-drive.scopes");
+var util = require("./util");
 var PREF_ACCT_NAME = 'gapi:acct_name';
 var REQUEST_ACCOUNT_PICKER = 1000;
 var REQUEST_AUTHORIZATION = 1001;
@@ -25,7 +26,7 @@ var GoogleDriveClient = (function () {
     }
     Object.defineProperty(GoogleDriveClient, "SELECTED_ACCOUNT", {
         get: function () {
-            return require('application-settings').getString(PREF_ACCT_NAME);
+            return util.getSelectedAccount();
         },
         enumerable: true,
         configurable: true

@@ -1,7 +1,7 @@
 {
   "name": "nativescript-google-drive",
   "version": "1.0.0",
-  "description": "A Google Drive client for NativeScript",
+  "description": "A Google Drive client for NativeScript (Android)",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
