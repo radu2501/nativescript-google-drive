@@ -17,6 +17,7 @@ export declare class GoogleDriveClient {
     uploadToAppFolder(path: string, mimeType?: string): Promise<string>;
     listAppFolder(): Promise<FileInfo[]>;
     lookupFileId(fileName: string): Promise<string>;
+    requestAuthorization(err: any): Promise<void>;
     listFiles(queryParams?: QueryParam[]): Promise<FileInfo[]>;
     private getNativeQueryParam(param);
     private getTaskCallback(onComplete, onError);

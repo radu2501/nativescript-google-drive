@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var DriveScopes = (function () {
+var DriveScopes = /** @class */ (function () {
     function DriveScopes() {
     }
     Object.defineProperty(DriveScopes, "DRIVE", {

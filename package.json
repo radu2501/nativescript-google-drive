@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "typedoc": "rmdir /s /q docs && typedoc --tsconfig tsconfig.json --out .\\docs --mode file --excludePrivate --hideGenerator --excludeNotExported --name \"NativeScript Google Drive Client (Android only)\"",
-    "build": "rmdir /s /q dist && tsc"
+    "build": "rmdir /s /q dist && tsc && yarn typedoc"
   },
   "repository": "https://github.com/radu2501/nativescript-google-drive",
   "keywords": [

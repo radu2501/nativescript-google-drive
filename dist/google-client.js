@@ -17,7 +17,7 @@ var REQUEST_AUTHORIZATION = 1001;
 var RESULT_OK = -1;
 var FOLDER_TYPE = 'application/vnd.google-apps.folder';
 var DriveTasks = ro.nicoara.radu.googledrive.Tasks;
-var GoogleDriveClient = (function () {
+var GoogleDriveClient = /** @class */ (function () {
     function GoogleDriveClient(appName, scopes) {
         if (scopes === void 0) { scopes = [google_drive_scopes_1.DriveScopes.DRIVE]; }
         this.appName = appName;
@@ -41,7 +41,19 @@ var GoogleDriveClient = (function () {
         return this.chooseAccount(credentials).then(function (credentials) { return Promise.resolve(credentials); })
             .then(function (credentials) { return _this.getService(credentials); }).then(function (service) {
             return new Promise(function (resolve, reject) {
-                DriveTasks.downloadFile(service, googleId, output, _this.getTaskCallback(resolve, reject));
+                DriveTasks.downloadFile(service, googleId, output, _this.getTaskCallback(resolve, function (err) {
+                    if (err.isTransientAuthError()) {
+                        _this.requestAuthorization(err)
+                            .then(function () {
+                            _this.downloadFile(googleId, output).then(function () { return resolve(); })
+                                .catch(function (werr) { return reject(werr); });
+                        })
+                            .catch(function (werr) { return reject(werr); });
+                    }
+                    else {
+                        reject(err);
+                    }
+                }));
             });
         });
     };
@@ -52,7 +64,19 @@ var GoogleDriveClient = (function () {
         return this.chooseAccount(credentials).then(function (credentials) { return Promise.resolve(_this.getService(credentials)); })
             .then(function (service) {
             return new Promise(function (resolve, reject) {
-                DriveTasks.uploadFile(service, path, parent, mimeType, _this.getTaskCallback(resolve, reject));
+                DriveTasks.uploadFile(service, path, parent, mimeType, _this.getTaskCallback(resolve, function (err) {
+                    if (err.isTransientAuthError()) {
+                        _this.requestAuthorization(err)
+                            .then(function () {
+                            _this.uploadFile(path, parent, mimeType).then(function (str) { return resolve(str); })
+                                .catch(function (werr) { return reject(werr); });
+                        })
+                            .catch(function (werr) { return reject(werr); });
+                    }
+                    else {
+                        reject(err);
+                    }
+                }));
             });
         });
     };
@@ -88,7 +112,19 @@ var GoogleDriveClient = (function () {
         return this.chooseAccount(credentials).then(function (credentials) { return Promise.resolve(_this.getService(credentials)); })
             .then(function (service) {
             return new Promise(function (resolve, reject) {
-                DriveTasks.createFile(service, fileName, mimeType, _this.getTaskCallback(resolve, reject));
+                DriveTasks.createFile(service, fileName, mimeType, _this.getTaskCallback(resolve, function (err) {
+                    if (err.isTransientAuthError()) {
+                        _this.requestAuthorization(err)
+                            .then(function () {
+                            _this.createFile(fileName, mimeType).then(function (str) { return resolve(str); })
+                                .catch(function (werr) { return reject(werr); });
+                        })
+                            .catch(function (werr) { return reject(werr); });
+                    }
+                    else {
+                        reject(err);
+                    }
+                }));
             });
         });
     };
@@ -99,7 +135,19 @@ var GoogleDriveClient = (function () {
             .then(function (credentials) { return _this.getService(credentials); })
             .then(function (service) {
             return new Promise(function (resolve, reject) {
-                DriveTasks.deleteFile(service, googleId, _this.getTaskCallback(resolve, reject));
+                DriveTasks.deleteFile(service, googleId, _this.getTaskCallback(resolve, function (err) {
+                    if (err.isTransientAuthError()) {
+                        _this.requestAuthorization(err)
+                            .then(function () {
+                            _this.deleteFile(googleId).then(function () { return resolve(); })
+                                .catch(function (werr) { return reject(werr); });
+                        })
+                            .catch(function (werr) { return reject(werr); });
+                    }
+                    else {
+                        reject(err);
+                    }
+                }));
             });
         });
     };
@@ -122,6 +170,20 @@ var GoogleDriveClient = (function () {
                 return Promise.reject(new Error('File not found.'));
             }
             return Promise.resolve(files[0].id);
+        });
+    };
+    GoogleDriveClient.prototype.requestAuthorization = function (err) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.setActivityResultCallback(function (requestCode, resultCode, data) {
+                if (resultCode === RESULT_OK) {
+                    resolve();
+                }
+                else {
+                    reject();
+                }
+            });
+            _this.getForegroundActivity().startActivityForResult(err.getCause().getIntent(), REQUEST_AUTHORIZATION);
         });
     };
     GoogleDriveClient.prototype.listFiles = function (queryParams) {
@@ -147,16 +209,12 @@ var GoogleDriveClient = (function () {
                     resolve(fileArray);
                 }, function (err) {
                     if (err.isTransientAuthError()) {
-                        _this.setActivityResultCallback(function (requestCode, resultCode, data) {
-                            if (resultCode === RESULT_OK) {
-                                _this.listFiles(queryParams).then(function () { return resolve(); })
-                                    .catch(function (err) { return reject(err); });
-                            }
-                            else {
-                                reject(err);
-                            }
-                        });
-                        _this.getForegroundActivity().startActivityForResult(err.getCause().getIntent(), REQUEST_AUTHORIZATION);
+                        _this.requestAuthorization(err)
+                            .then(function () {
+                            _this.listFiles(queryParams).then(function (fileArr) { return resolve(fileArr); })
+                                .catch(function (err) { return reject(err); });
+                        })
+                            .catch(function (err) { return reject(err); });
                     }
                     else {
                         reject(err);

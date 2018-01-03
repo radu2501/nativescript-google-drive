@@ -46,7 +46,18 @@ export class GoogleDriveClient {
         return this.chooseAccount(credentials).then((credentials) => Promise.resolve(credentials))
             .then(credentials => this.getService(credentials)).then(service => {
                 return new Promise<void>((resolve, reject) => {
-                    DriveTasks.downloadFile(service, googleId, output, this.getTaskCallback(resolve, reject));
+                    DriveTasks.downloadFile(service, googleId, output, this.getTaskCallback(resolve, (err) => {
+                        if (err.isTransientAuthError()) {
+                                this.requestAuthorization(err)
+                                    .then(() => {
+                                        this.downloadFile(googleId, output).then(() => resolve())
+                                            .catch(werr => reject(werr));
+                                    })
+                                    .catch(werr => reject(werr));
+                            } else {
+                                reject(err);
+                            }
+                    }));
                 });
             });
     }
@@ -56,7 +67,18 @@ export class GoogleDriveClient {
         return this.chooseAccount(credentials).then((credentials) => Promise.resolve(this.getService(credentials)))
             .then(service => {
                 return new Promise<string>((resolve, reject) => {
-                    DriveTasks.uploadFile(service, path, parent, mimeType, this.getTaskCallback(resolve, reject))
+                    DriveTasks.uploadFile(service, path, parent, mimeType, this.getTaskCallback(resolve, (err) => {
+                        if (err.isTransientAuthError()) {
+                                this.requestAuthorization(err)
+                                    .then(() => {
+                                        this.uploadFile(path, parent, mimeType).then((str) => resolve(str))
+                                            .catch(werr => reject(werr));
+                                    })
+                                    .catch(werr => reject(werr));
+                            } else {
+                                reject(err);
+                            }
+                    }));
                 });
             });
     }
@@ -94,7 +116,18 @@ export class GoogleDriveClient {
         return this.chooseAccount(credentials).then((credentials) => Promise.resolve(this.getService(credentials)))
             .then(service => {
                 return new Promise<string>((resolve, reject) => {
-                    DriveTasks.createFile(service, fileName, mimeType, this.getTaskCallback(resolve, reject));
+                    DriveTasks.createFile(service, fileName, mimeType, this.getTaskCallback(resolve, (err) => {
+                        if (err.isTransientAuthError()) {
+                                this.requestAuthorization(err)
+                                    .then(() => {
+                                        this.createFile(fileName, mimeType).then((str) => resolve(str))
+                                            .catch(werr => reject(werr));
+                                    })
+                                    .catch(werr => reject(werr));
+                            } else {
+                                reject(err);
+                            }
+                    }));
                 });
             });
     }
@@ -105,11 +138,22 @@ export class GoogleDriveClient {
             .then(credentials => this.getService(credentials))
             .then(service => {
                 return new Promise<void>((resolve, reject) => {
-                    DriveTasks.deleteFile(service, googleId, this.getTaskCallback(resolve, reject));
+                    DriveTasks.deleteFile(service, googleId, this.getTaskCallback(resolve, (err) => {
+                        if (err.isTransientAuthError()) {
+                            this.requestAuthorization(err)
+                                .then(() => {
+                                    this.deleteFile(googleId).then(() => resolve())
+                                        .catch(werr => reject(werr));
+                                })
+                                .catch(werr => reject(werr));
+                        } else {
+                            reject(err);
+                        }
+                    }));
                 });
             });
     }
-    
+
     public createFolder(folderName: string): Promise<string> {
         return this.createFile(folderName, FOLDER_TYPE);
     }
@@ -132,6 +176,19 @@ export class GoogleDriveClient {
                 return Promise.reject(new Error('File not found.'));
             }
             return Promise.resolve(files[0].id);
+        });
+    }
+
+    public requestAuthorization(err: any): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.setActivityResultCallback((requestCode, resultCode, data) => {
+                if (resultCode === RESULT_OK) {
+                    resolve();
+                } else {
+                    reject();
+                }
+            });
+            this.getForegroundActivity().startActivityForResult(err.getCause().getIntent(), REQUEST_AUTHORIZATION);
         });
     }
 
@@ -159,15 +216,12 @@ export class GoogleDriveClient {
                         },
                         (err) => {
                             if (err.isTransientAuthError()) {
-                                this.setActivityResultCallback((requestCode, resultCode, data) => {
-                                    if (resultCode === RESULT_OK) {
-                                        this.listFiles(queryParams).then(() => resolve())
+                                this.requestAuthorization(err)
+                                    .then(() => {
+                                        this.listFiles(queryParams).then((fileArr) => resolve(fileArr))
                                             .catch(err => reject(err));
-                                    } else {
-                                        reject(err);
-                                    }
-                                });
-                                this.getForegroundActivity().startActivityForResult(err.getCause().getIntent(), REQUEST_AUTHORIZATION);
+                                    })
+                                    .catch(err => reject(err));
                             } else {
                                 reject(err);
                             }
