@@ -1,0 +1,53 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>nativescript-google-drive</groupId>
+  <artifactId>nativescript-google-drive</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>NativeScript Google Drive</name>
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.7.0</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+  	<!-- https://mvnrepository.com/artifact/com.google.android/google-play-services -->
+	<dependency>
+	    <groupId>com.google.android</groupId>
+	    <artifactId>google-play-services</artifactId>
+	    <version>r22</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client -->
+	<dependency>
+	    <groupId>com.google.api-client</groupId>
+	    <artifactId>google-api-client</artifactId>
+	    <version>1.23.0</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/com.google.http-client/google-http-client -->
+	<dependency>
+	    <groupId>com.google.http-client</groupId>
+	    <artifactId>google-http-client</artifactId>
+	    <version>1.23.0</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-drive -->
+	<dependency>
+	    <groupId>com.google.apis</groupId>
+	    <artifactId>google-api-services-drive</artifactId>
+	    <version>v3-rev94-1.23.0</version>
+	</dependency>
+  </dependencies>
+  <repositories>
+  	<repository>
+  		<id>boundless</id>
+  		<url>http://repo.boundlessgeo.com/main/</url>
+  		<name>Boundless Repository</name>
+  	</repository>
+  </repositories>
+</project>

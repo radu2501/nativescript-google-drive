@@ -3,3 +3,7 @@ src
 src/**/*
 tsconfig.json
 *.android.d.ts
+build
+build/**/*
+docs
+docs/**/*
