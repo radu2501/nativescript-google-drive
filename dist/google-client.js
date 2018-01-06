@@ -16,7 +16,7 @@ var REQUEST_ACCOUNT_PICKER = 1000;
 var REQUEST_AUTHORIZATION = 1001;
 var RESULT_OK = -1;
 var FOLDER_TYPE = 'application/vnd.google-apps.folder';
-var DriveTasks = ro.nicoara.radu.googledrive.Tasks;
+var DriveTasks = nicoara.radu.gdrive.Tasks;
 var GoogleDriveClient = /** @class */ (function () {
     function GoogleDriveClient(appName, scopes) {
         if (scopes === void 0) { scopes = [google_drive_scopes_1.DriveScopes.DRIVE]; }
@@ -224,10 +224,10 @@ var GoogleDriveClient = /** @class */ (function () {
         });
     };
     GoogleDriveClient.prototype.getNativeQueryParam = function (param) {
-        return new ro.nicoara.radu.googledrive.QueryParam(param.key, "'" + param.value + "'", param.operator);
+        return new nicoara.radu.gdrive.QueryParam(param.key, "'" + param.value + "'", param.operator);
     };
     GoogleDriveClient.prototype.getTaskCallback = function (onComplete, onError) {
-        return new ro.nicoara.radu.googledrive.OnCompleteCallback({
+        return new nicoara.radu.gdrive.OnCompleteCallback({
             onComplete: onComplete,
             onError: onError
         });

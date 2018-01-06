@@ -1,4 +1,4 @@
-package ro.nicoara.radu.googledrive;
+package nicoara.radu.gdrive;
 
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;

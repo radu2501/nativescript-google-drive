@@ -1,4 +1,4 @@
-package ro.nicoara.radu.googledrive;
+package nicoara.radu.gdrive;
 
 public abstract class BaseTask {
 	protected OnCompleteCallback callback;

@@ -1,4 +1,4 @@
-package ro.nicoara.radu.googledrive;
+package nicoara.radu.gdrive;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 
 @SuppressWarnings("serial")

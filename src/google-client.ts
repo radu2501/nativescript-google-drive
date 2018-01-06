@@ -11,7 +11,7 @@ let AndroidHttp = com.google.api.client.extensions.android.http.AndroidHttp;
 let JacksonFactory = com.google.api.client.json.jackson2.JacksonFactory;
 let Manifest = android.Manifest;
 let AccountManager = android.accounts.AccountManager;
-declare var ro;
+declare var nicoara;
 
 
 import * as permissions from 'nativescript-permissions';
@@ -23,7 +23,7 @@ const REQUEST_AUTHORIZATION = 1001;
 const RESULT_OK = -1;
 const FOLDER_TYPE = 'application/vnd.google-apps.folder';
 
-let DriveTasks = ro.nicoara.radu.googledrive.Tasks;
+let DriveTasks = nicoara.radu.gdrive.Tasks;
 
 export class GoogleDriveClient {
     private application: any;
@@ -232,11 +232,11 @@ export class GoogleDriveClient {
     }
 
     private getNativeQueryParam(param: QueryParam): any {
-        return new ro.nicoara.radu.googledrive.QueryParam(param.key, `'${param.value}'`, param.operator);
+        return new nicoara.radu.gdrive.QueryParam(param.key, `'${param.value}'`, param.operator);
     }
 
     private getTaskCallback(onComplete: Function, onError: Function) {
-        return new ro.nicoara.radu.googledrive.OnCompleteCallback({
+        return new nicoara.radu.gdrive.OnCompleteCallback({
             onComplete: onComplete,
             onError: onError
         });
